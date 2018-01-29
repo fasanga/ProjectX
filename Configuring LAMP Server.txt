@@ -1,0 +1,89 @@
+Configuring a LAMP Cluster on AWS.
+
+1. Install multiple software packages; Linux, Apache, MSQL and PHP;
+# yum install -y httpd24 php70 mysql56-server php70-mysqlnd
+
+2. Start Apache server 
+ #service httpd start
+
+3. Use the chkconfig command to configure the Apache web server to start at each system boot 
+  #chkconfig httpd on
+
+4. verify that httpd is on by running the following command
+  #chkconfig --list httpd
+
+5. Modify security to open port 8o, if it was not open before and use you public DNS to access you Apache
+   from you web browser. 
+
+To set file permissions
+1. Add your user (in this case, ec2-user) to the apache group.
+  #usermod -a -G apache ec2-user
+
+2. Verify
+  #group
+
+3. To add group write permissions and to set the group ID on future subdirectories, 
+   change the directory permissions of /var/www and its subdirectories.
+    #chmod 2775 /var/www
+    #find /var/www -type d -exec sudo chmod 2775 {} \;
+
+4. To add group write permissions, recursively change the file permissions of /var/www and its subdirectories:
+   #find /var/www -type f -exec sudo chmod 0664 {} \;
+
+   Now, the ec2-user user (and any future members of the apache group) can add, delete, 
+   and edit files in the Apache document root. 
+
+To test your LAMP web server:
+
+1. Create a PHP file in the Apache document root.(Be sure you had set file permissions earlier).
+    echo "<?php phpinfo(); ?>" > /var/www/html/phpinfo.php
+
+2. In a web browser, type the URL of the file that you just created.Use your pbulic DNS
+   http://my.public.dns.amazonaws.com/phpinfo.php
+
+To secure the database server:
+1. Start the MySQL server.
+  # sudo service mysqld start
+
+2. Run mysql_secure_installation.
+  #mysql_secure_installation
+a. When prompted, type a password for the root account. 
+    -By default, root account has no passwd: type "Enter"
+    - Type Y to set a password
+    - Type Y to remove the anonymous user accounts.
+    - Type Y to disable the remote root login.
+    - Type Y to remove the test database.
+    - Type Y to reload the privilege tables and save your changes.
+
+3. If you do not plan to use the MySQL server right away, stop it. You can restart it when you need it again.
+   # service mysqld stop
+
+4. If you want the MySQL server to start at every boot, type the following command
+   # chkconfig mysqld on
+
+(Optional) Install phpMyAdmin: 
+phpMyAdmin is a web-based database management tool that you can use to view 
+and edit the MySQL databases on your EC2 instance. 
+
+1. Install the required dependencies.
+   #yum install php70-mbstring.x86_64 php70-zip.x86_64 -y
+
+2. Restart Apache.
+   #service httpd restart
+
+3. Navigate to the Apache document root at /var/www/html.
+   #cd /var/www/html
+
+4. copy the link and paste it into a wget command
+  #wget https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+5. Extract the package and change the name of the resulting directory to something more manageable.
+   #tar -xvzf phpMyAdmin-latest-all-languages.tar.gz
+   #mv phpMyAdmin-4.7.5-all-languages phpMyAdmin
+
+6. (Optional) If the MySQL server is not running, start it now.
+   #service mysqld start
+
+7. In a web browser, type the URL of your phpMyAdmin installation
+   http://my.public.dns.amazonaws.com/phpMyAdmin
+
+Now you are ready to add content, such as a static website or a PHP application.
